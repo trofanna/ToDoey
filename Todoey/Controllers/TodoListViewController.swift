@@ -100,10 +100,10 @@ class TodoListViewController: UITableViewController {
         let encoder = PropertyListEncoder()
         
         do {
-            print("bloody hell")
+
             let data = try encoder.encode(itemArray)
             try data.write(to: dataFilePath!)
-            print("bloody hell2")
+
         } catch {
             print("PhillErr001 Error encoding itemArray \(error)")
         }
