@@ -7,27 +7,22 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
     
+    //MARK: Global Variables and viewDidLoad actions
     
     var itemArray = [Item]()
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-
-        print(dataFilePath)
-        
-
-        
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         loadItems()
- 
-        
     }
     
-    //MARK - Tableview Datasource Methods
+    //MARK: - Tableview Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
@@ -38,88 +33,70 @@ class TodoListViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
         let item = itemArray[indexPath.row]
-        
         cell.textLabel?.text = item.title
         
         //Ternary operator ==>
         // value = condition ? valueIfTrue : valueIfFalse
-        
         cell.accessoryType = item.done ? .checkmark : .none
-        
-        
-        
         return cell
     }
     
-    //MARK - TableView Delegate Methods
+    //MARK: - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-        
-        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        
+       
+        // if selecting the item turns the checkmark on or off use the line below
+                    itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        // if selecting the item deletes it use the line below
+        // you MUST delete the context first otherwise the indexPath.row numbering will be out of synch and cause crashes
+                       //  context.delete(itemArray[indexPath.row])
+                       // itemArray.remove(at: indexPath.row)
         saveItems()
-
         tableView.deselectRow(at: indexPath, animated: true)
-        
     }
     
-    //MARK - Add New Items
+    //MARK: - Add New Items
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        
         var textField = UITextField()
-        
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
-        
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //what will happen once the user clicks the Add Item button on our UIAlert
-            
-            let newItem = Item()
+             let newItem = Item(context: self.context)
             newItem.title = textField.text!
-            
+            newItem.done = false
             self.itemArray.append(newItem)
             self.saveItems()
- 
         }
         
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Create new item"
             textField = alertTextField
-            
         }
         
         alert.addAction(action)
-        
         present(alert, animated: true, completion: nil)
-        
     }
-    //MARK - Model Manipulation Methods
+    
+    //MARK: - Model Manipulation Methods
     
     func saveItems() {
-        let encoder = PropertyListEncoder()
-        
         do {
-
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
-
+             try context.save()
         } catch {
-            print("PhillErr001 Error encoding itemArray \(error)")
-        }
+            print("error saving context \(error)")
+         }
         self.tableView.reloadData()
     }
     
+    
     func loadItems() {
-        
-        if let data = try? Data.init(contentsOf: dataFilePath!) {
-        let decoder = PropertyListDecoder()
-            do {
-        itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("PhillErr002: Couldnt unwrap data \(error)")
-            }
-            }
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+        itemArray = try context.fetch(request)
+        } catch {
+            print("Error fetching request \(error)")
+        }
     }
     
     
