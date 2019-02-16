@@ -60,9 +60,9 @@ class TodoListViewController: UITableViewController {
             do {
                 try realm.write {
                     //  line below should be uncommented if you want to delete row by selecting
-                    realm.delete(item)
+                    //  realm.delete(item)
                     //  ine below should be uncommentred if you want to update by selecting
-                    //    item.done = !item.done
+                    item.done = !item.done
                 }
             } catch {
                 print("Error saving done status \(error)")
