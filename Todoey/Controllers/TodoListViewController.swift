@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
     
     //MARK: Global Variables and viewDidLoad actions
     
@@ -18,7 +18,7 @@ class TodoListViewController: UITableViewController {
     
     var selectedCategory: Category? {
         didSet {
-           loadItems()
+            loadItems()
         }
     }
     
@@ -35,17 +35,12 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = toDoItems?[indexPath.row] {
         cell.tintColor = UIColor.black
         cell.textLabel?.text = item.title
-            
-
         cell.accessoryType = item.done ? .checkmark : .none
-            
-            print(toDoItems?.elements)
-            print(cell.accessoryType)
         }
         else {
             cell.textLabel?.text = "No Items Added Yet"
@@ -71,6 +66,25 @@ class TodoListViewController: UITableViewController {
         self.tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+    //MARK" Delete data from Swipe
+    
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let deleteItem = toDoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    realm.delete(deleteItem)
+                }
+            } catch {
+                print("Error deleting category")
+            }
+            // tableView.reloadData()
+            print("Item Deleted")
+            
+        }
+    }
+    
     
     //MARK: - Add New Items
     
